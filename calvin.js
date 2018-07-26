@@ -3,27 +3,60 @@ class Sprite {
     // TODO: think about how to represent a mask
     // with left and right sides for the left-and-right-facing images
 
-    constructor(ctx, src, [initX, initY]=[0,0]) {
+    constructor(ctx, src="calvin.png", [x,y]=[0,0]) {
 
-        this.x = initX;
-        this.y = initY;
+        this.x = x;
+        this.y = y;
         this.ctx = ctx;
         this.img = new Image(); // we draw image on 'load' event
         this.img.src = src;
-
-        window.addEventListener('load', this.render.bind(this));
+        this.direction = 'left';
+        this.img.addEventListener('load', this.render.bind(this));
 
     }
     
-    render(event, width=this.img.width, height=this.img.height) {
-        //this.ctx.drawImage(this.img, this.x, this.y, width, height);
-        this.ctx.drawImage(this.img, 0, 0, width, height);
+    render({ target }) {
+
+        const [
+            sourceStartX,
+            sourceWidth,
+            sourceStartY,
+            sourceHeight
+        ] = this.getMaskCoordinates(this.direction,[this.img.width, this.img.height]);
+
+        const destStartX = 0;
+        const destWidth = this.img.width/2;
+        const destStartY = 0;
+        const destHeight = this.img.height;
+
+        this.ctx.drawImage(  
+            this.img, 
+            sourceStartX, 
+            sourceStartY, 
+            sourceWidth, 
+            sourceHeight,
+            destStartX,
+            destStartY,
+            destWidth,
+            destHeight);
+    }
+
+    getMaskCoordinates(direction, [w,h]) {
+
+        let startX = (direction === 'left') ? 0 : w/2;
+        let startY = 0;
+        let width = w/2;
+        let height = h;
+
+        return [startX,width,startY,height];
+
     }
 
     scale(factor) {
         // make calvin larger or smaller based on the # of step
         // he was last on, and which one this is.
-        this.render(height=this.height*factor, width=this.width*factor);
+        this.img.height *= factor;
+        this.img.width *= factor;
     }
 
     reflect() {
@@ -39,48 +72,60 @@ class Sprite {
 
 class Calvin {
 
-    constructor(ctx,x,y,CalvinImage) {
+    constructor(ctx,[x,y]=[0,0],Sprite) {
 
-        this.currentStep = 0;
         this.ctx = ctx;
+        this.sprite = new Sprite(ctx,'calvin_sprite.png',[x,y]); // 
         this.x = x; // which corner does this x,y represent?
         this.y = y;
-        this.img = new Sprite('calvin.png',[]); // 
-        this.src;
+        this.currentStep = 0;
 
+        //this.sprite.scale(0.5);
 
         // think about mobile events, like tap, swipe
         // hammer.js might be useful
-        window.addEventListener('keyup', this.dispatchEvent); 
-        window.addEventListener('load', this.render.bind(this));
+        window.addEventListener('keyup', this.dispatchEvent.bind(this)); 
 
     }
 
-    dispatchEvent(e) {
+    dispatchEvent({key}) {
+        console.log(key);
+        if (key === 'ArrowLeft') {
+            this.move(-1);
+        }
+        if (key === 'ArrowRight') {
+            this.move(1);
+        }
         // if  key code is left / right arrow: move
         // if key is up: jump
-        // video game feel: you can run and jump, but stop yourself from continuing
-        // in mid air. 
+        // has a video game feel: you can run and jump, 
+        // but stop yourself from continuing horizontally in mid air. 
     }
 
-    update(newX,newY) {
+    update(xDir,yDir) {
         // update position
-        this.x = newX;
-        this.y = newY;
+        this.x += xDir;
+        this.y += yDir;
 
         // push updates to image
         this.render(this.x, this.y);
     }
 
-    render() {
-        this.img.render();
+    render(x,y) {
+        this.sprite.render();
     }
 
     jump() {
         // gravity fn
     }
 
-    move() {
+    move(dir) {
+
+        this.direction = dir < 0 ? 'left' : 'right';
+        this.x += xDir;
+        this.y += yDir;
+        this.render(this.x, this.y);
+
         // move calvin left or right
         // if direction changes, make sure to reflect calvin
     }
@@ -127,12 +172,11 @@ class Canvas {
     }
 
     setCanvasSize(event, height=window.outerHeight, width=window.outerWidth) {
-        console.log(height, width);
         this.canvas.height = height;
         this.canvas.width = width;
     }
 
 }
 
-const canvas = new Canvas('canvas');
-const calvinSprite = new Sprite(canvas.ctx, 'calvin_sprite.png');
+const { ctx } = new Canvas('canvas'); 
+const calvin = new Calvin(ctx, [0,0], Sprite);
