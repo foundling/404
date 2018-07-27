@@ -14,7 +14,6 @@ class Sprite {
     }
     
     render(event, pX=this.x, pY=this.y, direction) {
-        console.log('img loaded');
 
         const [
             sourceStartX,
@@ -39,6 +38,7 @@ class Sprite {
             destStartY,
             destWidth,
             destHeight);
+
     }
 
     getMaskCoordinates(direction, [w,h]) {
@@ -53,10 +53,12 @@ class Sprite {
     }
 
     scale(factor) {
+
         // make calvin larger or smaller based on the # of step
         // he was last on and which one this is.
         this.img.height *= factor;
         this.img.width *= factor;
+
     }
 
 }
@@ -85,11 +87,11 @@ class Calvin {
         }.bind(this));
 
         kd.DOWN.down(function() {
-            this.jump(-1);
+            this.jump(1);
         }.bind(this));
 
         kd.UP.down(function() {
-            this.jump(1);
+            this.jump(-1);
         }.bind(this));
 
     }
@@ -115,12 +117,11 @@ class Calvin {
     }
 
     jump(dir) {
-        this.y -= (this.moveFactor*dir);
+        this.y += (this.moveFactor*dir);
         this.render(this.x, this.y);
     }
 
     move(dir) {
-        console.log(this.direction);
         this.direction = dir < 0 ? 'left' : 'right';
         this.x += (dir * this.moveFactor);
         this.render(this.x, this.y);
