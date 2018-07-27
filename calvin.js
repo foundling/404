@@ -1,6 +1,6 @@
 class Sprite {
 
-    constructor(ctx, src="calvin.png", [x,y]=[0,0]) {
+    constructor(ctx, src, [x,y]=[0,0]) {
 
         this.x = x;
         this.y = y;
@@ -8,19 +8,20 @@ class Sprite {
         this.direction = 'left';
 
         this.img = new Image(); // wait until 'load' to draw image
+        this.img.addEventListener('load',this.render.bind(this));
         this.img.src = src;
-        this.img.addEventListener('load', this.render.bind(this));
 
     }
     
-    render(event, pX=this.x, pY=this.y) {
+    render(event, pX=this.x, pY=this.y, direction) {
+        console.log('img loaded');
 
         const [
             sourceStartX,
             sourceWidth,
             sourceStartY,
             sourceHeight
-        ] = this.getMaskCoordinates(this.direction,[this.img.width, this.img.height]);
+        ] = this.getMaskCoordinates(direction,[this.img.width, this.img.height]);
 
         const destStartX = pX;
         const destWidth = this.img.width/2;
@@ -70,11 +71,26 @@ class Calvin {
         this.y = y;
         this.currentStep = 0;
         this.moveFactor = 10;
-        this.render(this.x, this.y);
 
         // think about mobile events, like tap, swipe
         // hammer.js might be useful
         window.addEventListener('keyup', this.dispatchEvent.bind(this)); 
+
+        kd.RIGHT.down(function() {
+            this.move(1);
+        }.bind(this));
+
+        kd.LEFT.down(function() {
+            this.move(-1);
+        }.bind(this));
+
+        kd.DOWN.down(function() {
+            this.jump(-1);
+        }.bind(this));
+
+        kd.UP.down(function() {
+            this.jump(1);
+        }.bind(this));
 
     }
 
@@ -85,7 +101,9 @@ class Calvin {
                                 break;
             case 'ArrowRight':  this.move(1);
                                 break;
-            case 'ArrowUp':     this.jump();
+            case 'ArrowUp':     this.jump(1);
+                                break;
+            case 'ArrowDown':   this.jump(-1);
                                 break;
             default:            break;
         }
@@ -93,15 +111,16 @@ class Calvin {
     }
 
     render(x,y) {
-        this.sprite.render(null,x,y);
+        this.sprite.render(null,x,y, this.direction);
     }
 
-    jump() {
-        this.y -= (this.moveFactor);
+    jump(dir) {
+        this.y -= (this.moveFactor*dir);
         this.render(this.x, this.y);
     }
 
     move(dir) {
+        console.log(this.direction);
         this.direction = dir < 0 ? 'left' : 'right';
         this.x += (dir * this.moveFactor);
         this.render(this.x, this.y);
@@ -157,3 +176,7 @@ class Canvas {
 
 const { ctx } = new Canvas('canvas'); 
 const calvin = new Calvin(ctx, 'calvin_sprite.png', [0,0], Sprite);
+
+kd.run(function() {
+    kd.tick();
+});
